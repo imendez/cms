@@ -45,12 +45,14 @@ module.exports = {
         {
             route: '/login',
             method: 'get',
-            action: 'getIndex'
+            action: 'getIndex',
+            noAccessControl: true
         },
         {
             route: '/login',
             method: 'post',
-            action: 'postIndex'
+            action: 'postIndex',
+            noAccessControl: true
         }
     ]
 };

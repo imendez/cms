@@ -8,7 +8,8 @@ module.exports = {
         {
             route: '/logout',
             method: 'get',
-            action: 'getIndex'
+            action: 'getIndex',
+            noAccessControl: true
         }
     ]
 };
