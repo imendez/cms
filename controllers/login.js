@@ -1,20 +1,26 @@
-var Auth = require('../helpers/auth');
+module.exports = (function(){
+    'use strict';
 
-module.exports = {
-    getIndex: function (req, res, next) {
-        if (Auth.isAuthenticated(req)) {
+    var auth = require('../helpers/auth');
+    var login = {};
+
+    login.getIndex =  function (req, res) {
+        if (auth.isAuthenticated(req)) {
             return res.redirect('/');
         }
         res.render('login', {
             redir: req.query.redir || '',
             message: req.flash('message')
         });
-    },
-    postIndex: function (req, res, next) {
+    };
+
+    login.postIndex = function (req, res, next) {
         var User = require('../models/user');
 
         User.authenticate(req.body.username, req.body.password, function (err, user, reason) {
-            if (err) return next(err);
+            if (err) {
+                return next(err);
+            }
             // login was successful if we have a user
             if (user) {
                 req.session.user = {
@@ -26,7 +32,7 @@ module.exports = {
 
             // otherwise we can determine why we failed
             var reasons = User.failedLogin;
-            var message = "";
+            var message = '';
             switch (reason) {
                 case reasons.NOT_FOUND:
                 case reasons.PASSWORD_INCORRECT:
@@ -40,8 +46,9 @@ module.exports = {
             return res.redirect('/login');
         });
 
-    },
-    routes: [
+    };
+
+    login.routes = [
         {
             route: '/login',
             method: 'get',
@@ -54,5 +61,7 @@ module.exports = {
             action: 'postIndex',
             noAccessControl: true
         }
-    ]
-};
+    ];
+
+    return login;
+})();

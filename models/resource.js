@@ -1,9 +1,13 @@
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+module.exports = (function(){
+    'use strict';
 
-var resourceSchema = new Schema({
-    path: {type: String, trim: true, index: true, unique: true, required: true},
-    description: {type: String, required: false}
-});
+    var mongoose = require('mongoose'),
+        Schema = mongoose.Schema;
 
-module.exports = mongoose.model('Resource', resourceSchema);
+    var resourceSchema = new Schema({
+        path: {type: String, trim: true, index: true, unique: true, required: true},
+        description: {type: String, required: false}
+    });
+
+    return mongoose.model('Resource', resourceSchema);
+})();

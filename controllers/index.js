@@ -1,15 +1,22 @@
-module.exports = {
-    getIndex: function (req, res, next) {
+module.exports = (function() {
+    'use strict';
+
+    var index = {};
+
+    index.getIndex = function (req, res) {
         res.render('index', {
             title: 'Express'
         });
-    },
-    routes: [
+    };
+
+    index.routes = [
         {
             route: '/',
             method: 'get',
             action: 'getIndex',
             noAccessControl: true
         }
-    ]
-};
+    ];
+
+    return index;
+})();
