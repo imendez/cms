@@ -1,30 +1,31 @@
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema,
-    bcrypt = require('bcrypt')
-SALT_WORK_FACTOR = 10,
+    bcrypt = require('bcrypt'),
+    SALT_WORK_FACTOR = 10,
     MAX_LOGIN_ATTEMPTS = 5,
     LOCK_TIME = 5 * 60 * 1000; //5 minutos
 
 var userSchema = new Schema({
-    username:{ type:String, trim: true, lowercase: true, index:true, unique: true, required: true},
-    password:{ type:String, index:true, required: true},
-    email:{type:String, validate:/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/i, required: true, unique: true},
-    loginAttempts: { type: Number, required: true, default: 0 },
-    lockUntil: { type: Number }
+    username: {type: String, trim: true, lowercase: true, index: true, unique: true, required: true},
+    password: {type: String, index: true, required: true},
+    email: {type: String, validate: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/i, required: true, unique: true},
+    loginAttempts: {type: Number, required: true, default: 0},
+    lockUntil: {type: Number},
+    roles: [{type: Schema.Types.ObjectId, ref: 'Role'}]
 });
 
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
     var user = this;
 
     // only hash the password if it has been modified (or is new)
     if (!user.isModified('password')) return next();
 
     // generate a salt
-    bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+    bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
         if (err) return next(err);
 
         // hash the password along with our new salt
-        bcrypt.hash(user.password, salt, function(err, hash) {
+        bcrypt.hash(user.password, salt, function (err, hash) {
             if (err) return next(err);
 
             // override the cleartext password with the hashed one
@@ -36,31 +37,31 @@ userSchema.pre('save', function(next) {
     return null;
 });
 
-userSchema.virtual('isLocked').get(function() {
+userSchema.virtual('isLocked').get(function () {
     // check for a future lockUntil timestamp
     return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
-userSchema.methods.comparePassword = function(candidatePassword, cb) {
-    bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
+userSchema.methods.comparePassword = function (candidatePassword, cb) {
+    bcrypt.compare(candidatePassword, this.password, function (err, isMatch) {
         if (err) return cb(err);
         return cb(null, isMatch);
     });
 };
 
-userSchema.methods.incLoginAttempts = function(cb) {
+userSchema.methods.incLoginAttempts = function (cb) {
     // if we have a previous lock that has expired, restart at 1
     if (this.lockUntil && this.lockUntil < Date.now()) {
         return this.update({
-            $set: { loginAttempts: 1 },
-            $unset: { lockUntil: 1 }
+            $set: {loginAttempts: 1},
+            $unset: {lockUntil: 1}
         }, cb);
     }
     // otherwise we're incrementing
-    var updates = { $inc: { loginAttempts: 1 } };
+    var updates = {$inc: {loginAttempts: 1}};
     // lock the account if we've reached max attempts and it's not locked already
     if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !this.isLocked) {
-        updates.$set = { lockUntil: Date.now() + LOCK_TIME };
+        updates.$set = {lockUntil: Date.now() + LOCK_TIME};
     }
     return this.update(updates, cb);
 };
@@ -72,8 +73,8 @@ var reasons = userSchema.statics.failedLogin = {
     MAX_ATTEMPTS: 2
 };
 
-userSchema.statics.authenticate = function(username, password, cb) {
-    this.findOne({ username: username }, function(err, user) {
+userSchema.statics.authenticate = function (username, password, cb) {
+    this.findOne({username: username}, function (err, user) {
         if (err) return cb(err);
 
         // make sure the user exists
@@ -84,14 +85,14 @@ userSchema.statics.authenticate = function(username, password, cb) {
         // check if the account is currently locked
         if (user.isLocked) {
             // just increment login attempts if account is already locked
-            return user.incLoginAttempts(function(err) {
+            return user.incLoginAttempts(function (err) {
                 if (err) return cb(err);
                 return cb(null, null, reasons.MAX_ATTEMPTS);
             });
         }
 
         // test for a matching password
-        user.comparePassword(password, function(err, isMatch) {
+        user.comparePassword(password, function (err, isMatch) {
             if (err) return cb(err);
 
             // check if the password was a match
@@ -100,17 +101,17 @@ userSchema.statics.authenticate = function(username, password, cb) {
                 if (!user.loginAttempts && !user.lockUntil) return cb(null, user);
                 // reset attempts and lock info
                 var updates = {
-                    $set: { loginAttempts: 0 },
-                    $unset: { lockUntil: 1 }
+                    $set: {loginAttempts: 0},
+                    $unset: {lockUntil: 1}
                 };
-                return user.update(updates, function(err) {
+                return user.update(updates, function (err) {
                     if (err) return cb(err);
                     return cb(null, user);
                 });
             }
 
             // password is incorrect, so increment login attempts before responding
-            user.incLoginAttempts(function(err) {
+            user.incLoginAttempts(function (err) {
                 if (err) return cb(err);
                 return cb(null, null, reasons.PASSWORD_INCORRECT);
             });
@@ -120,5 +121,21 @@ userSchema.statics.authenticate = function(username, password, cb) {
     });
 };
 
+userSchema.statics.findUser = function (username, cb) {
+    this.findOne({'username': username})
+        .populate({path: "roles"})
+        .exec(function (err, user) {
+            if (err) return cb(err);
 
-module.exports =  mongoose.model('User', userSchema);
+            if (!user) {
+                return cb(null, null);
+            }
+            var options = {path: 'roles.resources', model: 'Resource'};
+            user.populate(options, function (err, user) {
+                cb(null, user);
+            });
+        });
+};
+
+
+module.exports = mongoose.model('User', userSchema);

@@ -21,7 +21,11 @@ function createRoutes(controller) {
     controller.routes = controller.routes || [];
     for (var i = 0; i < controller.routes.length; i++) {
         var route = controller.routes[i];
-        router[route.method](route.route, auth.isAuthorized, controller[route.action]);
+        if (route.noAccessControl) {
+            router[route.method](route.route, controller[route.action]);
+        } else {
+            router[route.method](route.route, auth.accessControl, controller[route.action]);
+        }
     }
 }
 

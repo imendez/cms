@@ -8,6 +8,12 @@ module.exports = {
         {
             route: '/',
             method: 'get',
+            action: 'getIndex',
+            noAccessControl: true
+        },
+        {
+            route: '/asd',
+            method: 'get',
             action: 'getIndex'
         }
     ]
