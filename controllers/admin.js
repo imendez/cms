@@ -2,8 +2,7 @@ module.exports = (function () {
     'use strict';
 
     var admin = {};
-    var users = require('../models/user');
-    var mongoose = require('mongoose')
+    var User = require('../models/user');
 
     admin.getIndex = function (req, res) {
         res.render('admin/index', {
@@ -11,10 +10,10 @@ module.exports = (function () {
         });
     };
 
-    admin.getUsers = function (req, res) {
-        users.getUsers(function (err, users) {
+    admin.getUsers = function (req, res, next) {
+        User.getUsers(function (err, users) {
             if (err) {
-                throw err;
+                next(err);
             }
             res.render('admin/users/index', {
                 users: users
@@ -22,15 +21,15 @@ module.exports = (function () {
         });
     };
 
-    admin.editUser = function (req, res) {
-        users.findUser({_id: req.params.userId}, function (err, user) {
+    admin.editUser = function (req, res, next) {
+        User.findUser({_id: req.params.userId}, function (err, user) {
             if (err) {
-                throw err;
+                next(err);
             }
             var roles = require('../models/role');
             roles.getRoles(function (err, roles) {
                 if (err) {
-                    throw err;
+                    next(err);
                 }
                 for (var i = 0; i < roles.length; i++) {
                     var role = roles[i];
@@ -46,24 +45,17 @@ module.exports = (function () {
     };
 
     admin.updateUser = function (req, res, next) {
-        users.findUser({_id: req.body.id}, function (err, user) {
+        User.findUser({_id: req.body.id}, function (err, user) {
             if (err) {
                 return next(err);
             }
             if (!user || !isValidUserData) {
-                return res.redirect('/admin/users/edit/' + req.body.id);
+                return res.redirect('/admin/user/edit/' + req.body.id);
             }
             user.username = req.body.username;
             user.email = req.body.email;
             user.roles = [];
-            req.body.roles = req.body.roles || [];
-            if (typeof req.body.roles === 'string') {
-                req.body.roles = [req.body.roles];
-            }
-            for (var i = 0; i < req.body.roles.length; i++) {
-                var role = req.body.roles[i];
-                user.roles.push(mongoose.Types.ObjectId(role));
-            }
+            addRolesToUser(user, req.body.roles);
             user.save(function (err) {
                 if (err) {
                     //TODO: handle error
@@ -73,6 +65,46 @@ module.exports = (function () {
             });
         });
     };
+
+    admin.getAddUser = function (req, res, next) {
+        var roles = require('../models/role');
+        roles.getRoles(function (err, roles) {
+            if (err) {
+                next(err);
+            }
+            res.render('admin/users/add', {
+                roles: roles
+            });
+        });
+
+    };
+
+    admin.postAddUser = function (req, res, next) {
+        var user = new User();
+        user.username = req.body.username;
+        user.email = req.body.email;
+        user.password = req.body.password;
+        addRolesToUser(user, req.body.roles);
+        user.save(function (err, user) {
+            if (err) {
+                //TODO: handle error
+                return next(err);
+            }
+            return res.redirect('/admin/users/edit/' + user._id);
+        });
+    };
+
+    function addRolesToUser(user, roles) {
+        var mongoose = require('mongoose');
+        roles = roles || [];
+        if (typeof roles === 'string') {
+            roles = [roles];
+        }
+        for (var i = 0; i < roles.length; i++) {
+            var role = roles[i];
+            user.roles.push(mongoose.Types.ObjectId(role));
+        }
+    }
 
     function isValidUserData(req) {
         return !!(req.body.username && req.body.email);
@@ -108,6 +140,18 @@ module.exports = (function () {
             route: '/admin/users/edit',
             method: 'post',
             action: 'updateUser',
+            noAccessControl: true
+        },
+        {
+            route: '/admin/users/add',
+            method: 'get',
+            action: 'getAddUser',
+            noAccessControl: true
+        },
+        {
+            route: '/admin/users/add',
+            method: 'post',
+            action: 'postAddUser',
             noAccessControl: true
         }
     ];
