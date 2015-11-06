@@ -1,5 +1,7 @@
-module.exports = (function(){
+module.exports = (function () {
     'use strict';
+
+    var role = require('../models/role');
 
     var mongoose = require('mongoose'),
         Schema = mongoose.Schema,
@@ -145,9 +147,9 @@ module.exports = (function(){
         });
     };
 
-    userSchema.statics.findUser = function (username, cb) {
-        this.findOne({'username': username})
-            .populate({path: 'roles'})
+    userSchema.statics.findUser = function (query, cb) {
+        this.findOne(query)
+            .populate({path: 'roles', model: role})
             .exec(function (err, user) {
                 if (err) {
                     return cb(err);
@@ -160,6 +162,17 @@ module.exports = (function(){
                 user.populate(options, function (err, user) {
                     cb(null, user);
                 });
+            });
+    };
+
+    userSchema.statics.getUsers = function (cb) {
+        this.find({}, {_id: 1, username: 1, email: 1, roles: 1})
+            .populate({path: 'roles', model: role})
+            .exec(function (err, users) {
+                if (err) {
+                    return cb(err);
+                }
+                cb(null, users);
             });
     };
 

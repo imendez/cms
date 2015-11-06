@@ -10,7 +10,7 @@ module.exports = (function () {
         var user = require('../models/user'),
             role = require('../models/role');
         if (auth.isAuthenticated(req)) {
-            user.findUser(req.session.user.username, function (err, user) {
+            user.findUser({username: req.session.user.username}, function (err, user) {
                 if (err) {
                     throw err;
                 }

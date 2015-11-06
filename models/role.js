@@ -1,4 +1,4 @@
-module.exports = (function(){
+module.exports = (function () {
     'use strict';
 
     var mongoose = require('mongoose'),
@@ -14,10 +14,26 @@ module.exports = (function(){
         this.findOne({name: role})
             .populate('resources')
             .exec(function (err, roles) {
-                if (err) return cb(err);
-                if (!roles) return cb(null, []);
+                if (err) {
+                    return cb(err);
+                }
+                if (!roles) {
+                    return cb(null, []);
+                }
                 cb(null, roles.resources);
             });
+    };
+
+    roleSchema.statics.getRoles = function (cb) {
+        this.find({}, function (err, roles) {
+            if (err) {
+                return cb(err);
+            }
+            if (!roles) {
+                return cb(null, []);
+            }
+            cb(null, roles);
+        });
     };
 
     return mongoose.model('Role', roleSchema);

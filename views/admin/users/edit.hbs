@@ -1,0 +1,16 @@
+<form action="/admin/users/edit" method="post">
+    <label for="username">Username:</label>
+    <input type="text" name="username" id="username" value="{{user.username}}">
+    <label for="email">Email:</label>
+    <input type="text" name="email" id="email" value="{{user.email}}">
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password">
+    <label for="roles">Roles:</label>
+    <select name="roles" id="roles" multiple>
+        {{#roles}}
+            <option value="{{_id}}" {{#if active}}selected{{/if}}>{{name}}</option>
+        {{/roles}}
+    </select>
+    <input type="hidden" value="{{user._id}}" name="id">
+    <button type="submit">Guardar</button>
+</form>
