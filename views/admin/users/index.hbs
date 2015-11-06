@@ -1,0 +1,20 @@
+<table>
+    <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Roles</th>
+    </tr>
+    <tr>
+        <td>guest</td>
+        <td></td>
+        <td>guest</td>
+    </tr>
+    {{#users}}
+    <tr>
+        <td><a href="/admin/users/edit/{{_id}}">{{username}}</a></td>
+        <td>{{email}}</td>
+        <td>{{#roles}}{{#unless @last}}, {{/unless}}{{name}}{{/roles}}</td>
+    </tr>
+    {{/users}}
+</table>
+
