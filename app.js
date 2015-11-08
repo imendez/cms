@@ -11,6 +11,7 @@ module.exports = (function(){
     var session = require('express-session');
     var MongoStore = require('connect-mongo')(session);
     var flash = require('connect-flash');
+    var compression = require('compression');
 
     var routes = require('./routes/index');
 
@@ -31,6 +32,7 @@ module.exports = (function(){
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
     app.use(logger('dev'));
+    app.use(compression());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: false}));
     app.use(cookieParser());

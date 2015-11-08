@@ -1,0 +1,13 @@
+<table>
+    <tr>
+        <th>Role</th>
+        <th>Description</th>
+    </tr>
+    {{#roles}}
+        <tr>
+            <td><a href="/admin/roles/edit/{{_id}}">{{name}}</a></td>
+            <td>{{description}}</td>
+        </tr>
+    {{/roles}}
+</table>
+

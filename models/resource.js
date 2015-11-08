@@ -9,5 +9,17 @@ module.exports = (function(){
         description: {type: String, required: false}
     });
 
+    resourceSchema.statics.getResources = function (cb) {
+        this.find({}, function (err, resources) {
+            if (err) {
+                return cb(err);
+            }
+            if (!resources) {
+                return cb(null, []);
+            }
+            cb(null, resources);
+        });
+    };
+
     return mongoose.model('Resource', resourceSchema);
 })();
