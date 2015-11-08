@@ -15,6 +15,7 @@ module.exports = (function(){
         for (var i = 0; i < controllers.length; i++) {
             try {
                 var controller = require('../' + controllers[i]);
+                console.log('Loading routes from: ' + controllers[i]);
                 createRoutes(controller);
             } catch (err) {
                 console.error(err);
