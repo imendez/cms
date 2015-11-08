@@ -3,10 +3,10 @@ module.exports = (function(){
 
     var express = require('express');
     var router = express.Router();
-    var fs = require('fs');
+    var dir = require('node-dir');
     var auth = require('../helpers/auth');
 
-    fs.readdir('controllers/', parseControllers);
+    dir.files('controllers/', parseControllers);
 
     function parseControllers(err, controllers) {
         if (err) {
@@ -14,7 +14,7 @@ module.exports = (function(){
         }
         for (var i = 0; i < controllers.length; i++) {
             try {
-                var controller = require('../controllers/' + controllers[i]);
+                var controller = require('../' + controllers[i]);
                 createRoutes(controller);
             } catch (err) {
                 console.error(err);
