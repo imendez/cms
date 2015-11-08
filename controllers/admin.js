@@ -178,6 +178,67 @@ module.exports = (function () {
         });
     };
 
+    admin.getResources = function (req, res, next) {
+        Resource.getResources(function (err, resources) {
+            if (err) {
+                return next(err);
+            }
+            res.render('admin/resources/index', {
+                resources: resources
+            });
+        });
+    };
+
+    admin.editResource = function (req, res, next) {
+        Resource.findById(req.params.resourceId)
+            .exec(function (err, resource) {
+                if (err) {
+                    return next(err);
+                }
+                res.render('admin/resources/edit', {
+                    resource: resource
+                });
+            });
+    };
+
+
+    admin.updateResource = function (req, res, next) {
+        Resource.findById(req.body.id, function (err, resource) {
+            if (err) {
+                return next(err);
+            }
+            if (!resource || !isValidResourceData(req)) {
+                return res.redirect('/admin/resources/edit/' + req.body.id);
+            }
+            resource.path = req.body.path;
+            resource.description = req.body.description;
+            resource.save(function (err) {
+                if (err) {
+                    //TODO: handle error
+                    return next(err);
+                }
+                return res.redirect('/admin/resources/edit/' + req.body.id);
+            });
+        });
+    };
+
+    admin.getAddResource = function (req, res) {
+        res.render('admin/resources/add');
+    };
+
+    admin.postAddResource = function (req, res, next) {
+        var resource = new Resource();
+        resource.path = req.body.path;
+        resource.description = req.body.description;
+        resource.save(function (err, resource) {
+            if (err) {
+                //TODO: handle error
+                return next(err);
+            }
+            return res.redirect('/admin/resources/edit/' + resource._id);
+        });
+    };
+
     function addRolesToUser(user, roles) {
         roles = roles || [];
         if (typeof roles === 'string') {
@@ -208,6 +269,11 @@ module.exports = (function () {
         return !!(req.body.name && req.body.id);
     }
 
+    function isValidResourceData(req) {
+        return !!(req.body.path && req.body.id);
+    }
+
+
     function isRoleActive(user, role) {
         return user.roles.map(
                 function (x) {
@@ -233,62 +299,77 @@ module.exports = (function () {
         {
             route: '/admin/users',
             method: 'get',
-            action: 'getUsers',
-            noAccessControl: true
+            action: 'getUsers'
         },
         {
             route: '/admin/users/edit/:userId',
             method: 'get',
-            action: 'editUser',
-            noAccessControl: true
+            action: 'editUser'
         },
         {
             route: '/admin/users/edit',
             method: 'post',
-            action: 'updateUser',
-            noAccessControl: true
+            action: 'updateUser'
         },
         {
             route: '/admin/users/add',
             method: 'get',
-            action: 'getAddUser',
-            noAccessControl: true
+            action: 'getAddUser'
         },
         {
             route: '/admin/users/add',
             method: 'post',
-            action: 'postAddUser',
-            noAccessControl: true
+            action: 'postAddUser'
         },
         {
             route: '/admin/roles',
             method: 'get',
-            action: 'getRoles',
-            noAccessControl: true
+            action: 'getRoles'
         },
         {
             route: '/admin/roles/edit/:roleId',
             method: 'get',
-            action: 'editRole',
-            noAccessControl: true
+            action: 'editRole'
         },
         {
             route: '/admin/roles/edit',
             method: 'post',
-            action: 'updateRole',
-            noAccessControl: true
+            action: 'updateRole'
         },
         {
             route: '/admin/roles/add',
             method: 'get',
-            action: 'getAddRole',
-            noAccessControl: true
+            action: 'getAddRole'
         },
         {
             route: '/admin/roles/add',
             method: 'post',
-            action: 'postAddRole',
-            noAccessControl: true
+            action: 'postAddRole'
+        },
+        {
+            route: '/admin/resources',
+            method: 'get',
+            action: 'getResources'
+        },
+        {
+            route: '/admin/resources/edit/:resourceId',
+            method: 'get',
+            action: 'editResource'
+        },
+        {
+            route: '/admin/resources/edit',
+            method: 'post',
+            action: 'updateResource'
+        },
+        {
+            route: '/admin/resources/add',
+            method: 'get',
+            action: 'getAddResource'
+        },
+        {
+            route: '/admin/resources/add',
+            method: 'post',
+            action: 'postAddResource'
         }
     ];
 

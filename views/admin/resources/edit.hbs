@@ -1,0 +1,8 @@
+<form action="/admin/resources/edit" method="post">
+    <label for="path">Ruta:</label>
+    <input type="text" name="path" id="path" value="{{resource.path}}">
+    <label for="description">Descripción:</label>
+    <textarea name="description" id="description" cols="30" rows="10">{{resource.description}}</textarea>
+    <input type="hidden" value="{{resource._id}}" name="id">
+    <button type="submit">Guardar</button>
+</form>
