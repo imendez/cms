@@ -12,9 +12,25 @@ module.exports = (function () {
         LOCK_TIME = 5 * 60 * 1000; //5 minutos
 
     var userSchema = new Schema({
-        username: {type: String, trim: true, lowercase: true, index: true, unique: true, required: true},
+        username: {
+            type: String, trim: true, lowercase: true, index: true,
+            unique: true, required: true, maxlength: 16, minlength: 4,
+            validate: {
+                validator: function (v) {
+                    return /^[a-z0-9-_]+$/i.test(v);
+                },
+                message: '{VALUE} no es un usuario válido'
+            }
+        },
         password: {type: String, index: true, required: true},
-        email: {type: String, validate: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/i, required: true, unique: true},
+        email: {
+            type: String, validate: {
+                validator: function (v) {
+                    return /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/i.test(v);
+                },
+                message: '{VALUE} no es un email válido'
+            }, required: true, unique: true
+        },
         loginAttempts: {type: Number, required: true, default: 0},
         lockUntil: {type: Number},
         roles: [{type: Schema.Types.ObjectId, ref: 'Role'}]

@@ -8,7 +8,7 @@ module.exports = (function(){
         if (auth.isAuthenticated(req)) {
             return res.redirect('/');
         }
-        res.render('login', {
+        res.render('login/index', {
             redir: req.query.redir || '',
             message: req.flash('message')
         });

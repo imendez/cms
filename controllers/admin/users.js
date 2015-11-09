@@ -77,6 +77,20 @@ module.exports = (function () {
         user.username = req.body.username;
         user.email = req.body.email;
         user.password = req.body.password;
+        var validation = require('../helpers/validation');
+        var messages = validation.validateUser(user);
+        if (messages.length > 0) {
+            Role.getRoles(function (err, roles) {
+                if (err) {
+                    return next(err);
+                }
+                res.render('admin/users/add', {
+                    roles: roles,
+                    user: user,
+                    message: messages
+                });
+            });
+        }
         addRolesToUser(user, req.body.roles);
         user.save(function (err, user) {
             if (err) {
